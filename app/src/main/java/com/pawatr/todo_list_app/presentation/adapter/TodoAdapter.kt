@@ -8,7 +8,11 @@ import com.pawatr.todo_list_app.data.model.Note
 import com.pawatr.todo_list_app.databinding.ItemTodoBinding
 
 @SuppressLint("NotifyDataSetChanged")
-class ToDoAdapter : RecyclerView.Adapter<ToDoAdapter.ToDoViewHolder>() {
+class TodoAdapter(
+    val onCheckedChange: (Note, Boolean) -> Unit,
+    val onItemClick: (Note) -> Unit,
+    val onDeleteClick: (Note) -> Unit
+) : RecyclerView.Adapter<TodoAdapter.ToDoViewHolder>() {
 
     var todos: List<Note> = emptyList()
         set(value) {
@@ -31,8 +35,18 @@ class ToDoAdapter : RecyclerView.Adapter<ToDoAdapter.ToDoViewHolder>() {
     inner class ToDoViewHolder(private val binding: ItemTodoBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(note: Note) {
             binding.apply {
+                checkbox.isChecked = note.isCompleted
+                checkbox.setOnCheckedChangeListener { _, isChecked ->
+                    onCheckedChange(note, isChecked)
+                }
                 title.text = note.title
                 description.text = note.description
+                deleteButton.setOnClickListener {
+                    onDeleteClick(note)
+                }
+                root.setOnClickListener {
+                    onItemClick(note)
+                }
             }
         }
     }

@@ -6,7 +6,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.pawatr.todo_list_app.data.model.Note
 import com.pawatr.todo_list_app.databinding.ActivityMainBinding
-import com.pawatr.todo_list_app.presentation.adapter.ToDoAdapter
+import com.pawatr.todo_list_app.presentation.adapter.TodoAdapter
 import com.pawatr.todo_list_app.presentation.viewmodel.NoteViewModel
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -16,7 +16,7 @@ class MainActivity : AppCompatActivity() {
     private val noteViewModel: NoteViewModel by viewModel()
     private lateinit var binding: ActivityMainBinding
 
-    private var todoAdapter = ToDoAdapter()
+    private var todoAdapter: TodoAdapter? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,6 +29,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupView() = with(binding) {
+        todoAdapter = TodoAdapter(
+            onCheckedChange = { todo, isChecked ->
+                updateTodoChecked(todo, isChecked)
+            },
+            onItemClick = { todo ->
+                displayEditTodoDialog(todo)
+            },
+            onDeleteClick = { todo ->
+                noteViewModel.deleteTodo(todo)
+            }
+        )
         todoRecyclerView.apply {
             layoutManager = LinearLayoutManager(this@MainActivity)
             adapter = todoAdapter
@@ -38,30 +49,31 @@ class MainActivity : AppCompatActivity() {
     private fun observeTodos() {
         lifecycleScope.launch {
             noteViewModel.todos.collect { todos ->
-                todoAdapter.todos = todos
+                todoAdapter?.todos = todos
             }
         }
     }
 
     private fun setupListeners() = with(binding) {
-        addTodoButton.setOnClickListener {
-            val title = newTodoTitleEditText.text.toString()
-            if (title.isNotEmpty()) {
-                noteViewModel.insertTodo(Note(title = title, description = "", timeHour = 0, timeMinute = 0))
-                newTodoTitleEditText.text.clear()
-            }
+        fab.setOnClickListener {
+            displayAddTodoDialog()
         }
+    }
 
-        updateFirstTodoButton.setOnClickListener {
-            noteViewModel.todos.value.firstOrNull()?.let {
-                noteViewModel.updateTodo(it.copy(isCompleted = true))
-            }
-        }
+    private fun updateTodoChecked(todo: Note, isChecked: Boolean) {
+        val newTodo = todo.copy(isCompleted = isChecked)
+        noteViewModel.updateTodo(newTodo)
+    }
 
-        deleteLastTodoButton.setOnClickListener {
-            noteViewModel.todos.value.lastOrNull()?.let {
-                noteViewModel.deleteTodo(it)
-            }
-        }
+    private fun displayAddTodoDialog() {
+        TodoDialogFragment { newTodo ->
+            noteViewModel.insertTodo(newTodo)
+        }.show(supportFragmentManager, "AddTodoDialog")
+    }
+
+    private fun displayEditTodoDialog(todo: Note) {
+        TodoDialogFragment(todo) { updatedTodo ->
+            noteViewModel.updateTodo(updatedTodo)
+        }.show(supportFragmentManager, "EditTodoDialog")
     }
 }
