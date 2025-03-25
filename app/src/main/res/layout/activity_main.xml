@@ -12,7 +12,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Todo List"
+        android:text="@string/text_todo_list_title"
         android:textSize="24sp"
         android:textStyle="bold" />
 
@@ -22,7 +22,9 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:clipToPadding="false"
-        android:paddingTop="8dp" />
+        android:paddingTop="8dp"
+        tools:listitem="@layout/item_todo"
+        tools:itemCount="4"/>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab"
